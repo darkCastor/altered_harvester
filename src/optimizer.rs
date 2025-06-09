@@ -1,3 +1,9 @@
+// Version: 1.2.0
+// Description: A standalone script to optimize raw card data for the game "Altered".
+//              It reads a raw JSON file harvested by the main script, processes it
+//              into a structured format, adds lookup tables, and includes metadata.
+//              This version is updated to handle the `is_suspended` flag.
+
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -5,18 +11,25 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 
 // --- Configuration ---
+const SCRIPT_VERSION: &str = "1.2.0"; // Version of this optimizer script
 const SOURCE_FILE: &str = "altered_all_cards.json";
 const OUTPUT_FILE: &str = "altered_optimized.json";
 
-// --- Output Data Structures ---
-// These structs define the exact shape of our final, optimized JSON.
-// Using `BTreeMap` instead of `HashMap` ensures the JSON keys are sorted,
-// making the output file deterministic and easier to read.
+// --- Input Data Structures ---
+// This struct must match the output of the harvester function in main.rs
+#[derive(Deserialize)]
+struct HarvestedCard {
+    card_data: serde_json::Value,
+    is_suspended: bool,
+}
 
+// --- Output Data Structures ---
 #[derive(Serialize)]
 struct Meta {
+    script_version: String,
     generated_at_utc: DateTime<Utc>,
     source_set: String,
+    data_sources: Vec<String>,
     total_cards: usize,
 }
 
@@ -60,6 +73,7 @@ struct OptimizedCard {
     qr_url: String,
     main_cost: i64,
     recall_cost: i64,
+    is_suspended: bool, // New field
     power: PowerStats,
 }
 
@@ -71,9 +85,9 @@ struct OptimizedData {
 }
 
 // --- Main Logic ---
-
+// This function is not called by main.rs but can be used if you want to run optimization separately.
 pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
-    println!("⚙️  Starting JSON optimization (Rust version)...");
+    println!("⚙️  Starting JSON optimization (Standalone Rust version)...");
 
     // --- 1. Load and Parse Source File ---
     println!("   > Loading raw data from '{}'...", SOURCE_FILE);
@@ -89,9 +103,9 @@ pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
     };
     let reader = BufReader::new(source_file);
 
-    // Parse into a generic JSON Value to avoid defining a massive struct for the raw data.
-    let raw_cards: Vec<serde_json::Value> = serde_json::from_reader(reader)?;
-    println!("   > Loaded {} raw card objects.", raw_cards.len());
+    // Parse into the HarvestedCard structure
+    let raw_harvest: Vec<HarvestedCard> = serde_json::from_reader(reader)?;
+    println!("   > Loaded {} raw card objects.", raw_harvest.len());
 
     // --- 2. Initialize Structures for Optimized Data ---
     let mut lookup_tables = LookupTables {
@@ -100,16 +114,21 @@ pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
         card_types: BTreeMap::new(),
     };
     let mut optimized_cards = BTreeMap::new();
-    let source_set = raw_cards
+
+    // Since we don't know the exact source set from the raw file, we make a reasonable guess or use a generic value.
+    let source_set = raw_harvest
         .get(0)
-        .and_then(|c| c.get("cardSet"))
+        .and_then(|h| h.card_data.get("cardSet"))
         .and_then(|s| s.get("reference"))
         .and_then(|r| r.as_str())
-        .unwrap_or("Unknown")
+        .unwrap_or("Multiple Sets") // Default to generic value
         .to_string();
 
     // --- 3. Process Each Card ---
-    for card_value in &raw_cards {
+    for harvested_card in &raw_harvest {
+        let card_value = &harvested_card.card_data;
+        let is_suspended = harvested_card.is_suspended;
+
         // Use helper closures for clean, safe data extraction
         let get_str = |obj: &serde_json::Value, key: &str| -> String {
             obj.get(key)
@@ -124,34 +143,40 @@ pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
                 .unwrap_or(0)
         };
 
-        // Populate lookup tables using the BTreeMap::entry API to avoid duplicates
+        // Populate lookup tables
         if let Some(rarity) = card_value.get("rarity") {
             let rarity_ref = get_str(rarity, "reference");
-            lookup_tables
-                .rarities
-                .entry(rarity_ref)
-                .or_insert_with(|| RarityInfo {
-                    name: get_str(rarity, "name"),
-                });
+            if !rarity_ref.is_empty() {
+                lookup_tables
+                    .rarities
+                    .entry(rarity_ref)
+                    .or_insert_with(|| RarityInfo {
+                        name: get_str(rarity, "name"),
+                    });
+            }
         }
         if let Some(faction) = card_value.get("mainFaction") {
             let faction_ref = get_str(faction, "reference");
-            lookup_tables
-                .factions
-                .entry(faction_ref)
-                .or_insert_with(|| FactionInfo {
-                    name: get_str(faction, "name"),
-                    color: get_str(faction, "color"),
-                });
+            if !faction_ref.is_empty() {
+                lookup_tables
+                    .factions
+                    .entry(faction_ref)
+                    .or_insert_with(|| FactionInfo {
+                        name: get_str(faction, "name"),
+                        color: get_str(faction, "color"),
+                    });
+            }
         }
         if let Some(card_type) = card_value.get("cardType") {
             let type_ref = get_str(card_type, "reference");
-            lookup_tables
-                .card_types
-                .entry(type_ref)
-                .or_insert_with(|| CardTypeInfo {
-                    name: get_str(card_type, "name"),
-                });
+            if !type_ref.is_empty() {
+                lookup_tables
+                    .card_types
+                    .entry(type_ref)
+                    .or_insert_with(|| CardTypeInfo {
+                        name: get_str(card_type, "name"),
+                    });
+            }
         }
 
         // Create the simplified, optimized card object
@@ -186,6 +211,7 @@ pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
             qr_url: get_str(card_value, "qrUrlDetail"),
             main_cost: get_i64(elements, "MAIN_COST"),
             recall_cost: get_i64(elements, "RECALL_COST"),
+            is_suspended, // Set the flag
             power: PowerStats {
                 m: get_i64(elements, "MOUNTAIN_POWER"),
                 o: get_i64(elements, "OCEAN_POWER"),
@@ -203,8 +229,11 @@ pub fn run_optimizer() -> Result<(), Box<dyn std::error::Error>> {
     // --- 4. Assemble and Save the Final Optimized Data ---
     let final_data = OptimizedData {
         meta: Meta {
+            script_version: SCRIPT_VERSION.to_string(),
             generated_at_utc: Utc::now(),
             source_set,
+            // Since this script only reads the file, we can't know the original queries.
+            data_sources: vec![format!("Loaded from '{}'", SOURCE_FILE)],
             total_cards: optimized_cards.len(),
         },
         lookup_tables,
