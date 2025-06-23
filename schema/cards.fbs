@@ -1,0 +1,50 @@
+// FlatBuffer schema for Altered card data optimization
+namespace AlteredCards;
+
+table Faction {
+  reference: string;
+  name: string;
+  color: string;
+}
+
+table Rarity {
+  reference: string;
+  name: string;
+}
+
+table CardType {
+  reference: string;
+  name: string;
+}
+
+table PowerStats {
+  mountain: ubyte;
+  ocean: ubyte;
+  forest: ubyte;
+}
+
+table Card {
+  reference: string;
+  name: string;
+  faction_idx: ubyte;        // Index into factions table
+  rarity_idx: ubyte;         // Index into rarities table
+  card_type_idx: ubyte;      // Index into card_types table
+  main_cost: ubyte;
+  recall_cost: ubyte;
+  power: PowerStats;
+  image_path: string;
+  qr_url: string;
+  is_suspended: bool;
+}
+
+table CardDatabase {
+  factions: [Faction];
+  rarities: [Rarity];
+  card_types: [CardType];
+  cards: [Card];
+  generated_at_utc: string;
+  script_version: string;
+  total_cards: uint32;
+}
+
+root_type CardDatabase;

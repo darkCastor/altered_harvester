@@ -1,7 +1,7 @@
 {
   "meta": {
-    "script_version": "1.2.0",
-    "generated_at_utc": "2025-06-09T14:42:58.325927200Z",
+    "script_version": "2.0.0",
+    "generated_at_utc": "2025-06-23T09:40:13.488358145Z",
     "source_set": "Multiple Sets",
     "data_sources": [
       "https://api.altered.gg/cards?itemsPerPage=36&locale=fr-fr&cardSet[]=COREKS&rarity[]=COMMON&rarity[]=RARE",
@@ -10,7 +10,7 @@
       "https://api.altered.gg/cards?itemsPerPage=36&locale=fr-fr&cardSet[]=BISE&rarity[]=COMMON&rarity[]=RARE",
       "https://api.altered.gg/cards?itemsPerPage=36&locale=fr-fr&isSuspended=true&rarity[]=COMMON&rarity[]=RARE"
     ],
-    "total_cards": 1695
+    "total_cards": 1698
   },
   "lookup_tables": {
     "rarities": {
@@ -5666,6 +5666,22 @@
         "f": 0
       }
     },
+    "ALT_BISE_B_AX_31_C": {
+      "name": "Scarabot",
+      "type_ref": "TOKEN",
+      "faction_ref": "AX",
+      "rarity_ref": "COMMON",
+      "image_path": "https://altered-prod-eu.s3.amazonaws.com/Art/BISE/CARDS/ALT_BISE_B_AX_31/JPG/fr_FR/e46abbffe993fd37ac424ef304d54511.jpg",
+      "qr_url": "https://qr.altered.gg/ALT_BISE_B_AX_31_C",
+      "main_cost": 0,
+      "recall_cost": 0,
+      "is_suspended": false,
+      "power": {
+        "m": 2,
+        "o": 2,
+        "f": 2
+      }
+    },
     "ALT_BISE_B_AX_49_C": {
       "name": "Renifleur de Sève",
       "type_ref": "CHARACTER",
@@ -8706,6 +8722,22 @@
         "f": 0
       }
     },
+    "ALT_BISE_B_OR_31_C": {
+      "name": "Recrue Ordis",
+      "type_ref": "TOKEN",
+      "faction_ref": "OR",
+      "rarity_ref": "COMMON",
+      "image_path": "https://altered-prod-eu.s3.amazonaws.com/Art/BISE/CARDS/ALT_BISE_B_OR_31/JPG/fr_FR/121d348f4e223d0b62427a2e66f21ad3.jpg",
+      "qr_url": "https://qr.altered.gg/ALT_BISE_B_OR_31_C",
+      "main_cost": 0,
+      "recall_cost": 0,
+      "is_suspended": false,
+      "power": {
+        "m": 1,
+        "o": 1,
+        "f": 1
+      }
+    },
     "ALT_BISE_B_OR_49_C": {
       "name": "Crieur Ordis",
       "type_ref": "CHARACTER",
@@ -9456,6 +9488,22 @@
         "m": 0,
         "o": 0,
         "f": 0
+      }
+    },
+    "ALT_BISE_B_YZ_47_C": {
+      "name": "Phalène de Mana",
+      "type_ref": "TOKEN",
+      "faction_ref": "YZ",
+      "rarity_ref": "COMMON",
+      "image_path": "https://altered-prod-eu.s3.amazonaws.com/Art/BISE/CARDS/ALT_BISE_B_YZ_47/JPG/fr_FR/75ea277e77aa4d8c0aaebb4b0da27bb1.jpg",
+      "qr_url": "https://qr.altered.gg/ALT_BISE_B_YZ_47_C",
+      "main_cost": 0,
+      "recall_cost": 0,
+      "is_suspended": false,
+      "power": {
+        "m": 2,
+        "o": 2,
+        "f": 2
       }
     },
     "ALT_BISE_B_YZ_49_C": {
