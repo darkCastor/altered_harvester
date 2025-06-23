@@ -1,7 +1,7 @@
 {
   "meta": {
     "script_version": "2.0.0",
-    "generated_at_utc": "2025-06-23T09:40:13.488358145Z",
+    "generated_at_utc": "2025-06-23T13:38:39.231337985Z",
     "source_set": "Multiple Sets",
     "data_sources": [
       "https://api.altered.gg/cards?itemsPerPage=36&locale=fr-fr&cardSet[]=COREKS&rarity[]=COMMON&rarity[]=RARE",

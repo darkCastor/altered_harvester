@@ -17,6 +17,9 @@ use std::time::Duration;
 mod cards_generated;
 use cards_generated::altered_cards::*;
 
+mod optimizer_v2;
+mod delta_manager;
+
 // --- Configuration ---
 const SCRIPT_VERSION: &str = "2.0.0";
 const RAW_OUTPUT_FILENAME: &str = "altered_all_cards.json";
@@ -86,14 +89,14 @@ struct LookupTables {
     card_types: BTreeMap<String, CardTypeInfo>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct LocalPowerStats {
     m: i64,
     o: i64,
     f: i64,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 struct OptimizedCard {
     name: String,
     type_ref: String,
@@ -291,6 +294,17 @@ fn optimize_cards(harvested_cards: Vec<HarvestedCard>) -> Result<(), Box<dyn std
     
     // Generate FlatBuffer format
     generate_flatbuffer(&final_data)?;
+    
+    // Generate advanced optimized formats
+    println!("\n   > Generating advanced optimized formats...");
+    optimizer_v2::save_optimized_formats(&final_data)?;
+    
+    // Create sample delta update
+    println!("\n   > Creating sample delta update system...");
+    let sample_delta = delta_manager::create_sample_delta();
+    delta_manager::DeltaManager::new("./deltas/")
+        .save_delta(&sample_delta, "sample_delta_v2.0.0_to_v2.0.1.json")?;
+    println!("     - Sample delta update saved for demonstration");
 
     Ok(())
 }

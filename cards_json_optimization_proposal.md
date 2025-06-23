@@ -163,41 +163,41 @@ table CardDatabase {
 - **Protocol Buffers**: Schema-based compression, good performance
 - **CBOR**: Compact binary object representation
 
-## Implementation Recommendation
+## Remaining Implementation Opportunities
 
-**Priority 1: FlatBuffers Implementation** ✅ COMPLETED
-1. **Schema design**: Define FlatBuffer schema for cards data ✅
-2. **Conversion tool**: Build JSON-to-FlatBuffer converter ✅
-3. **Client libraries**: Update applications to use FlatBuffer readers ✅
-4. **Performance testing**: Validate 500x speed improvements ✅
+**Future enhancements (not yet implemented):**
+1. **URL pattern extraction**: Implement base URL system for image paths
+2. **Template system**: Add power value templates for further compression  
+3. **MessagePack conversion**: Binary JSON alternative with easier adoption
+4. **Content-based deduplication**: Identify and merge cards with identical stats
+5. **Incremental updates**: Delta format for card database updates
 
-**Alternative approaches (if FlatBuffers not feasible):**
-1. **Adopt current optimization**: Migrate from raw to optimized JSON format ✅
-2. **URL pattern extraction**: Implement base URL system  
-3. **Template system**: Add power value templates for further compression
-4. **MessagePack conversion**: Binary JSON alternative with easier adoption
+## Implementation Challenges & Critical Review
 
-## IMPLEMENTATION STATUS - COMPLETED! 🎉
+**Current FlatBuffers Implementation Issues:**
 
-**FlatBuffers Implementation Complete (v2.0.0)**
-- ✅ **Schema Defined**: Complete FlatBuffer schema in `schema/cards.fbs`
-- ✅ **Build System**: Automated FlatBuffer compilation via `build.rs`
-- ✅ **Converter Built**: Full JSON-to-FlatBuffer conversion pipeline
-- ✅ **Dual Output**: Script now generates both JSON and FlatBuffer formats
-- ✅ **Performance Optimized**: Zero-copy access with 80-90% size reduction
+1. **Size Claims Don't Match Reality**
+   - **Promised**: 80-90% reduction (~200-400KB)
+   - **Actual**: 443KB (only 48% reduction from 865KB JSON)
+   - **Gap**: Implementation delivers half the promised compression
 
-**Key Features Implemented:**
-- **Lookup table normalization**: Eliminates 99%+ data redundancy
-- **Index-based references**: Uses u8 indices instead of repeated objects
-- **Compressed data types**: u8 for costs/power values vs full JSON objects
-- **Zero-copy access**: Direct memory access without parsing overhead
-- **Cross-platform compatibility**: Works across all supported languages
+2. **Performance Claims Unvalidated**
+   - **Claimed**: 500x faster access (0.1ms vs 50ms)
+   - **Reality**: No benchmarks provided to validate these numbers
+   - **Risk**: May not deliver expected performance gains
 
-## Conclusion
+3. **Schema Design Inefficiencies**
+   - Still uses full strings for card references instead of numeric IDs
+   - PowerStats table creates object overhead instead of bit-packing
+   - Faction/Rarity/CardType tables duplicate data that could be enum constants
 
-**FlatBuffers implementation is now COMPLETE** - offering 80-90% size reduction and 500x performance improvement over JSON. The script has been fully upgraded to v2.0.0 with dual output:
+4. **Missing Advanced Optimizations**
+   - No string interning for repeated values
+   - No delta compression for similar cards
+   - No statistical encoding for common patterns
 
-1. **JSON format**: `altered_optimized.json` - 66% smaller than raw format
-2. **FlatBuffer format**: `altered_cards.fb` - Additional 80-90% reduction with zero-copy access
-
-**Run the script to generate both formats automatically!**
+**Recommended Next Steps:**
+1. **Benchmark actual performance** vs JSON parsing
+2. **Optimize schema** with numeric IDs and bit-packed power values
+3. **Implement string pools** for repeated text values
+4. **Add compression** wrapper (gzip/lz4) for additional size reduction

@@ -1,0 +1,87 @@
+// Optimized FlatBuffer schema for Altered card data
+// Features: Numeric IDs, bit-packed power values, string pools
+namespace AlteredCards;
+
+// String pool for common repeated strings
+table StringPool {
+  strings: [string];
+}
+
+// Optimized faction with enum-like numeric ID
+table Faction {
+  id: uint16;                // Numeric ID instead of string reference
+  name_idx: uint16;          // Index into string pool
+  color_idx: uint16;         // Index into string pool
+}
+
+// Optimized rarity with enum-like numeric ID
+table Rarity {
+  id: uint16;                // Numeric ID instead of string reference
+  name_idx: uint16;          // Index into string pool
+}
+
+// Optimized card type with enum-like numeric ID
+table CardType {
+  id: uint16;                // Numeric ID instead of string reference
+  name_idx: uint16;          // Index into string pool
+}
+
+// Bit-packed power stats - uses single uint32 instead of 3 separate fields
+// Layout: 8 bits mountain, 8 bits ocean, 8 bits forest, 8 bits reserved
+union PowerValue {
+  packed: uint32,            // All power values in single 32-bit field
+  separate: PowerStats,      // Fallback to separate values if needed
+}
+
+table PowerStats {
+  mountain: ubyte;
+  ocean: ubyte;
+  forest: ubyte;
+}
+
+// Highly optimized card structure
+table Card {
+  id: uint32;                // Numeric card ID (hash of reference string)
+  reference_idx: uint16;     // Index into string pool for reference string
+  name_idx: uint16;          // Index into string pool for name
+  faction_id: uint16;        // Direct numeric faction ID
+  rarity_id: uint16;         // Direct numeric rarity ID
+  card_type_id: uint16;      // Direct numeric card type ID
+  main_cost: ubyte;
+  recall_cost: ubyte;
+  power: PowerValue;         // Bit-packed or separate power values
+  image_path_idx: uint16;    // Index into string pool
+  qr_url_idx: uint16;        // Index into string pool
+  flags: ubyte;              // Bit flags: suspended, etc. (8 boolean flags in 1 byte)
+}
+
+// Delta structure for incremental updates
+table CardDelta {
+  added_cards: [Card];
+  modified_cards: [Card];
+  removed_card_ids: [uint32];
+  delta_version: uint32;
+  base_version: uint32;
+}
+
+// Compressed card database with all optimizations
+table OptimizedCardDatabase {
+  string_pool: StringPool;
+  factions: [Faction];
+  rarities: [Rarity];
+  card_types: [CardType];
+  cards: [Card];
+  
+  // Metadata
+  generated_at_utc_idx: uint16;    // Index into string pool
+  script_version_idx: uint16;      // Index into string pool
+  total_cards: uint32;
+  database_version: uint32;
+  
+  // Compression metadata
+  compression_type: ubyte;         // 0=none, 1=gzip, 2=lz4
+  original_size: uint32;
+  compressed_size: uint32;
+}
+
+root_type OptimizedCardDatabase;
